@@ -52,9 +52,9 @@ if you happen to find a bug, also contact me at the email above
 including the data passed into the program that caused the bug
 i'll be happy to take a look at it
 
-*************************
+*********************************
 Contributors: Cpt Eman since v0.1
-*************************
+*********************************
 """
 
 
@@ -96,9 +96,12 @@ def add_expense():
 
 
 def make_payment():
-    expense = input("For what expense are you making a payment: ").lower()
-    amount = float(input("Payment amount: $"))
-    database.process_payment(expense, amount)
+    bill = input("For what expense are you making a payment: ").lower()
+    if database._find_bill(bill):
+        amount = _convert_to_float(input("Payment amount: $"))
+        database.process_payment(expense, amount)
+    else:
+	print("!! Expense not found !!")
 
 
 def remove_expense():
