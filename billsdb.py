@@ -6,87 +6,71 @@ import json
     ]
 """
 
-payment_file = "monthly.json"
+bills_file = "bills.json"
 
 
 def create_file():  # just makes sure json file is there when it first runs
     try:
-        with open(payment_file, 'x') as file:
+        with open(bills_file, 'x') as file:
             json.dump([], file)
     except FileExistsError:
         pass
 
 
 def show_payments():
-    payments = _get_payments()
+    bills = _get_bills()
 
-    for payment in payments:
-        payment_name = payment['expense']
-        if not payment['complete']:
-            payment_total = payment['total']
-            payment_amount = payment['amount']
-            payment_remaining = payment['remaining']
-            paid = payment['paid']
-            payment_string = f"| {payment_name.title()}: Total: ${payment_total:,.2f} " \
-                             f"Payment amount: ${payment_amount:,.2f} Remaining: ${payment_remaining:,.2f} " \
-                             f"Paid to date: ${paid:,.2f} |"
-            print("-"*(len(payment_string)))
-            print(payment_string)
-            print("-"*(len(payment_string)))
+    for bill in bills:
+        bill_name = bill['expense']
+        if not bill['complete']:
+            bill_total = bill['total']
+            bill_amount = bill['amount']
+            bill_remaining = bill['remaining']
+            paid = bill['paid']
+            bill_string = f"| {bill_name.title()}: Total: ${bill_total:,.2f} Payment amount: ${bill_amount:,.2f} " \
+                          f"Remaining: ${bill_remaining:,.2f} Paid to date: ${paid:,.2f} |"
+            print("-"*(len(bill_string)))
+            print(bill_string)
+            print("-"*(len(bill_string)))
         else:
-            payment_string = f"| {payment_name.title()}: PAID IN FULL |"
+            payment_string = f"| {bill_name.title()}: PAID IN FULL |"
             print("-"*len(payment_string))
             print(payment_string)
             print("-"*len(payment_string))
 
 
 def process_payment(expense, amount):
-    index, payment = _get_bill(expense)
+    index, bill = _get_bill(expense)
 
-    if payment is not None:
-        if not payment['complete']:
-            payment_remaining = payment['remaining']
-            payment_paid = payment['paid']
-
-            payment_remaining -= amount
-            payment_paid += amount
-            payment['amount'] = amount
-            if payment_remaining <= 0:
-                payment['complete'] = True
-            else:
-                payment['remaining'] = payment_remaining
-                payment['paid'] = payment_paid
+    if bill is not None:
+        if not bill['complete']:
+            bill['remaining'] -= amount
+            bill['paid'] += amount
+            bill['amount'] = amount
+            if bill['remaining'] <= 0:
+                bill['complete'] = True
             print('Payment successful')
-        else:
-            print("!! Ezpense not found !!")
-    _update_and_write(payment, index)
+            _update_and_write(bill, index)
 
 
 def quick_pay(expense):
-    index, payment = _get_bill(expense)
+    index, bill = _get_bill(expense)
 
-    if payment is not None:
-        if not payment['complete']:
-            payment_amount = payment['amount']
-            payment_remaining = payment['remaining']
-            payment_paid = payment['paid']
-
-            payment_remaining -= payment_amount
-            payment_paid += payment_amount
-            if payment_remaining <= 0:
-                payment['complete'] = True
-            else:
-                payment['remaining'] = payment_remaining
-                payment['paid'] = payment_paid
+    if bill is not None:
+        if not bill['complete']:
+            bill['remaining'] -= bill['amount']
+            bill['paid'] += bill['amount']
+            if bill['remaining'] <= 0:
+                bill['complete'] = True
             print('payment successful')
-        else:
-            print("!! Expense not found !!")
-    _update_and_write(payment, index)
+            _update_and_write(bill, index)
+    else:
+        print("!! Expense not found !!\n")
 
 
 def add_expense(expense, amount, total):
-    payments = _get_payments()
-    payments.append(
+    bills = _get_bills()
+    bills.append(
         {
             "expense": expense,
             "amount": amount,
@@ -96,90 +80,43 @@ def add_expense(expense, amount, total):
             "paid": 0.0
         }
     )
-    _write_file(payments)
+    _write_file(bills)
 
 
 def remove(expense):
-    payments = _get_payments()
-    payments = [payment for payment in payments if payment["expense"] != expense]
+    bills = _get_bills()
+    bills = [bill for bill in bills if bill["expense"] != expense]
 
-    _write_file(payments)
-
-
-def _write_file(payments):  # functions that start with _ are considered 'private' access modifier, devs know not to use
-    with open(payment_file, 'w') as file:
-        json.dump(payments, file)
+    _write_file(bills)
 
 
-def _get_payments():
-    with open(payment_file, 'r') as file:
+def find_bill(bill_name):
+    bills = _get_bills()
+    return any(bill['expense'] == bill_name for bill in bills)
+
+
+def _write_file(bills):
+    with open(bills_file, 'w') as file:
+        json.dump(bills, file)
+
+
+def _get_bills():
+    with open(bills_file, 'r') as file:
         return json.load(file)
 
 
 def _get_bill(expense):
-    payments = _get_payments()
+    bills = _get_bills()
 
-    for i, payment in enumerate(payments):
-        if payment['expense'] == expense:
-            return i, payment
-    return None
+    for i, bill in enumerate(bills):
+        if bill['expense'] == expense:
+            return i, bill
 
-
-def find_bill(bill):
-    payments = _get_payments()
-    # print(payments)
-    return any(payment['expense'] == bill for payment in payments)
+    return None, None
 
 
-def _update_and_write(payment, index):
-    payments = _get_payments()
-    payments[index] = payment
+def _update_and_write(bill, index):
+    bills = _get_bills()
+    bills[index] = bill
 
-    _write_file(payments)
-
-
-"""quick_pay(): found = False
-    for payment in payments:
-        if not payment['complete']:
-            if payment['expense'] == expense:
-                found = True
-                remaining = payment['remaining']
-                amount = payment['amount']
-                paid = payment['paid']
-
-                remaining -= amount
-                paid += amount
-                if remaining <= 0:
-                    payment['complete'] = True
-                else:
-                    payment['remaining'] = remaining
-                    payment['paid'] = paid
-                print("Payment success")
-        else:
-            found = True
-            print("Nothing to pay for this bill")
-
-    if not found:
-        print("!! Expense not found !!")
-"""
-"""process_payment():  payments = _get_payments()
-    found = False
-    for payment in payments:
-        if not payment['complete']:
-            if payment['expense'] == expense:
-                found = True
-                payment['amount'] = amount
-                remaining = payment['remaining']
-                remaining -= amount
-                payment['remaining'] = remaining
-                paid = payment['paid']
-                paid += amount
-                payment['paid'] = paid
-                remaining = payment['remaining']
-                if remaining <= 0:
-                    payment['complete'] = True
-        else:
-            print("Nothing to pay for this bill")
-    if not found:
-        print("!! Expense not found !!")
-"""
+    _write_file(bills)

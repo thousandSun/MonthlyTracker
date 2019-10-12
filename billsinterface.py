@@ -1,11 +1,11 @@
-import database
+import billsdb
 
 USER_PROMPT = """--> 1 - add expense
 --> 2 - make payment
 --> 3 - remove expense
 --> 4 - quick pay
 --> 5 - help
---> 9 - exit program
+--> 9 - main menu
 --> 0 - show credits
 
 Make a selection: """
@@ -44,14 +44,6 @@ CREDITS_MESSAGE = """
 !!!!!!!!!!!!!!!!!!!!!!!!!
 Written by Filiberto Rios
 !!!!!!!!!!!!!!!!!!!!!!!!!
-This is my first "real-world" application, will be trying to add
-more features shortly if you have any ideas please contact me at
-filibertoerios@gmail.com with ideas and be added to the credits.
-
-if you happen to find a bug, also contact me at the email above
-including the data passed into the program that caused the bug
-i'll be happy to take a look at it
-
 *********************************
 Contributors: Cpt Eman since v0.1
 *********************************
@@ -59,11 +51,10 @@ Contributors: Cpt Eman since v0.1
 
 
 def menu():
-    database.create_file()
-    user_choice = ""
+    billsdb.create_file()
     print(WELCOME_MESSAGE)
-    while user_choice != 9:
-        database.show_payments()
+    while True:
+        billsdb.show_payments()
         try:
             user_choice = int(input(USER_PROMPT))
         except ValueError:
@@ -82,48 +73,55 @@ def menu():
         elif user_choice == 0:
             print(CREDITS_MESSAGE)
         elif user_choice == 9:
-            print("Goodbye")
+            return
         else:
             print("Invalid input, try again.")
 
 
 def add_expense():
     expense = input("Payment name: ").lower()
-    total = _convert_to_float(input("Total amount due: $"))
-    amount = _convert_to_float(input("Monthly payment amount: $"))
-
-    database.add_expense(expense, amount, total)
+    total = _to_float(input("Total amount due: $"))
+    amount = _to_float(input("Monthly payment amount: $"))
+    if total is not None and amount is not None:
+        billsdb.add_expense(expense, amount, total)
+    else:
+        print(f'{"Invalid total" if total is None else "Invalid amount"}, try again')
 
 
 def make_payment():
     bill = input("For what expense are you making a payment: ").lower()
     # print(database.find_bill(bill))
-    if database.find_bill(bill):
-        amount = _convert_to_float(input("Payment amount: $"))
-        database.process_payment(bill, amount)
+    if billsdb.find_bill(bill):
+        amount = _to_float(input("Payment amount: $"))
+        if amount is not None:
+            billsdb.process_payment(bill, amount)
+        else:
+            print("Invalid input, try again")
     else:
         print("!! Expense not found !!")
 
 
 def remove_expense():
     expense = input("What payment do you want to remove: ").lower()
-    database.remove(expense)
+    billsdb.remove(expense)
 
 
 def quick_pay():
     expense = input("Expense: ")
 
-    database.quick_pay(expense)
+    billsdb.quick_pay(expense)
 
 
 def show_help():
     print(HELP_MESSAGE)
 
 
-def _convert_to_float(variable):
+def _to_float(variable):
     variable = variable.split(",")
     variable = "".join(variable)
-    return float(variable)
 
-
-menu()
+    try:
+        variable = float(variable)
+    except ValueError:
+        return None
+    return variable

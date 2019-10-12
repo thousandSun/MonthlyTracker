@@ -41,10 +41,6 @@ filibertoerios@gmail.com with ideas and be added to the credits.
 if you happen to find a bug, also contact me at the email above
 including the data passed into the program that caused the bug
 I'll be happy to take a look at it
-
-*************
-Contributors:
-*************
 """
 
 
@@ -53,6 +49,7 @@ def start():
     user_choice = ""
 
     while user_choice != 4:
+        print("Main Menu:")
         try:
             user_choice = int(input(USER_PROMPT))
         except ValueError:
