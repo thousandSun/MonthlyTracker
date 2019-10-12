@@ -43,45 +43,45 @@ def show_payments():
 def process_payment(expense, amount):
     index, payment = _get_bill(expense)
 
-    if payment not None:
-	if not payment['complete']:
-	    payment_remaining = payment['remaining']
-	    payment_paid = payment['paid']
+    if payment is not None:
+        if not payment['complete']:
+            payment_remaining = payment['remaining']
+            payment_paid = payment['paid']
 
-	    payment_remaining -= amount
-	    payment_paid += amount
-	    payment['amount'] = amount
-	    if remaining <= 0:
-		payment['complete'] = True
-	    else:
-		payment['remaining'] = payment_remaining
-		payment['paid'] = payment_paid
-	    print('Payment successful')
-    else:
-	print("!! Ezpense not found !!")
+            payment_remaining -= amount
+            payment_paid += amount
+            payment['amount'] = amount
+            if payment_remaining <= 0:
+                payment['complete'] = True
+            else:
+                payment['remaining'] = payment_remaining
+                payment['paid'] = payment_paid
+            print('Payment successful')
+        else:
+            print("!! Ezpense not found !!")
     _update_and_write(payment, index)
 
 
 def quick_pay(expense):
     index, payment = _get_bill(expense)
 
-    if payment not None:
-	if not payment['complete']:
-	    payment_amount = payment['amount']
-	    payment_remaining = payment['remaining']
-	    payment_paid = payment['paid']
+    if payment is not None:
+        if not payment['complete']:
+            payment_amount = payment['amount']
+            payment_remaining = payment['remaining']
+            payment_paid = payment['paid']
 
-	    remaining -= amount
-	    paid += amount
-	    if remaining <= 0:
-		payment['complete'] = True
-	    else:
-		payment['remaining'] = remaining
-		payment['paid'] = paid
-	    print('payment successful')  #use enumerate() to get index value of the dict instead, so you can override it in the payments before writing to file
-    else:
-	print("!! Expense not found !!")
-    _update_and_write(payments, index)
+            payment_remaining -= payment_amount
+            payment_paid += payment_amount
+            if payment_remaining <= 0:
+                payment['complete'] = True
+            else:
+                payment['remaining'] = payment_remaining
+                payment['paid'] = payment_paid
+            print('payment successful')
+        else:
+            print("!! Expense not found !!")
+    _update_and_write(payment, index)
 
 
 def add_expense(expense, amount, total):
@@ -120,18 +120,19 @@ def _get_bill(expense):
     payments = _get_payments()
 
     for i, payment in enumerate(payments):
-	if payment['expense'] == expense:
-	    return i, payment
+        if payment['expense'] == expense:
+            return i, payment
     return None
 
 
-def _find_bill(bill):
+def find_bill(bill):
     payments = _get_payments()
-    return bill in payments.values()
+    # print(payments)
+    return any(payment['expense'] == bill for payment in payments)
 
 
 def _update_and_write(payment, index):
-    payments = _get_payment()
+    payments = _get_payments()
     payments[index] = payment
 
     _write_file(payments)

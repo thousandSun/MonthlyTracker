@@ -97,11 +97,12 @@ def add_expense():
 
 def make_payment():
     bill = input("For what expense are you making a payment: ").lower()
-    if database._find_bill(bill):
+    # print(database.find_bill(bill))
+    if database.find_bill(bill):
         amount = _convert_to_float(input("Payment amount: $"))
-        database.process_payment(expense, amount)
+        database.process_payment(bill, amount)
     else:
-	print("!! Expense not found !!")
+        print("!! Expense not found !!")
 
 
 def remove_expense():
