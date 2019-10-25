@@ -3,11 +3,11 @@ import dbUpdate.db as db
 WELCOME_MESSAGE = """Welcome to MonthlyTracker v0.4!"""
 
 USER_PROMPT = """You have the following options available:
---> 1 - add expense
+--> 1 - add bill
 --> 2 - make payment
---> 3 - remove expense
+--> 3 - remove bill
 --> 4 - quick pay
---> 5 - update expense
+--> 5 - update bill
 --> 6 - help
 --> 9 - exit
 --> 0 - show credits
@@ -16,7 +16,7 @@ Make a selection: """
 
 HELP_MESSAGE = """Welcome to Help
 
-Option 1 - add expense
+Option 1 - add bill
     this option lets you add a monthly expenditure to your list of
     expenses
 
@@ -24,15 +24,16 @@ Option 2 - make payment
     this option allows you to enter a custom payment amount that
     will be saved to use in `quick pay` functionality
 
-option 3 - remove expense
+option 3 - remove bill
     this option does what it says, it removes a specific expense
 
 Option 4 - quick pay
     this option allows you to use last months payment amount as
     this months payment amount, you don't enter a payment amount
 
-Option 5 - update expense
-    allows you to change the name, total, and payment amount of an expense
+Option 5 - update bill
+    allows you to change the name, remaining balance, and payment amount of an expense
+    (ex. your current credit card remaining balance is $500, you make a $50 purchase increasing the remaining balance to $550)
 
 Option 6 - help
     displays this somewhat useful help message
