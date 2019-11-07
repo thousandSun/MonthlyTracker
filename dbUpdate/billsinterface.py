@@ -1,15 +1,15 @@
-import billsdb as db
+import dbUpdate.billsdb as db
 
-WELCOME_MESSAGE = """
-Welcome to MonthlyTracker!"""
+WELCOME_MESSAGE = """Welcome to MonthlyTracker v0.4!"""
 
-USER_PROMPT = """--> 1 - add bill
+USER_PROMPT = """You have the following options available:
+--> 1 - add bill
 --> 2 - make payment
 --> 3 - remove bill
 --> 4 - quick pay
 --> 5 - update bill
 --> 6 - help
---> 9 - main menu
+--> 9 - exit
 --> 0 - show credits
 
 Make a selection: """
@@ -38,8 +38,8 @@ Option 5 - update bill
 Option 6 - help
     displays this somewhat useful help message
 
-Option 9 - main menu
-    returns to the main menu
+Option 9 - exit program
+    closes the program
 
 Option 0 - show credits
     shows the author and the contributors to this project
@@ -61,7 +61,6 @@ def menu():
     user_choice = ''
     while user_choice != 9:
         db.show_expenses()
-        print("You have the following options available:")
         try:
             user_choice = int(input(USER_PROMPT))
         except ValueError:
@@ -80,6 +79,8 @@ def menu():
             update()
         elif user_choice == 6:
             print(HELP_MESSAGE)
+        elif user_choice == 9:
+            break
         elif user_choice == 0:
             print(CREDITS_MESSAGE)
 
@@ -126,7 +127,10 @@ def _to_float(variable):
 
     try:
         variable = float(variable)
-    except TypeError:
+    except ValueError:
         return None
 
     return variable
+
+
+menu()
