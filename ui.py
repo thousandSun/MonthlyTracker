@@ -1,7 +1,7 @@
-import categoriesinterface
-import billsinterface
+import billsinterface as billsinterface
+import categoriesinterface as categoriesinterface
 
-WELCOME_MESSAGE = """Welcome to Expense Tracker v0.1
+WELCOME_MESSAGE = """Welcome to Expense Tracker v1.0
 You have the following options available:"""
 
 USER_PROMPT = """--> 1 - Bills Tracker
@@ -49,6 +49,7 @@ def start():
     user_choice = ""
 
     while user_choice != 4:
+        print()
         print("Main Menu:")
         try:
             user_choice = int(input(USER_PROMPT))
