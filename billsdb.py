@@ -1,122 +1,174 @@
-import json
+from database_connection import DatabaseConnection
 
-"""JSON object will look like this
-    [
-        {"expense": value, "amount": value, "total": value, "remaining": value, "complete": False, "paid": value}
-    ]
-"""
-
-bills_file = "bills.json"
+bills_db = "bills.db"
 
 
-def create_file():  # just makes sure json file is there when it first runs
-    try:
-        with open(bills_file, 'x') as file:
-            json.dump([], file)
-    except FileExistsError:
-        pass
+def create_table():
+    with DatabaseConnection(bills_db) as connection:
+        cursor = connection.cursor()
+
+        cursor.execute("CREATE TABLE IF NOT EXISTS bills(name text primary key, total real, payment real, "
+                       "remaining real, paid real, complete BIT)")
 
 
-def show_payments():
-    bills = _get_bills()
+def show_expenses():
+    expenses = _get_bills()
 
-    for bill in bills:
-        bill_name = bill['expense']
-        if not bill['complete']:
+    for bill in expenses:
+        bill_name = bill['name']
+        if not bool(bill['complete']):
             bill_total = bill['total']
-            bill_amount = bill['amount']
+            bill_payment = bill['payment']
             bill_remaining = bill['remaining']
-            paid = bill['paid']
-            bill_string = f"| {bill_name.title()}: Total: ${bill_total:,.2f} Payment amount: ${bill_amount:,.2f} " \
-                          f"Remaining: ${bill_remaining:,.2f} Paid to date: ${paid:,.2f} |"
-            print("-"*(len(bill_string)))
+            bill_paid = bill['paid']
+
+            bill_string = f'| {bill_name.title()}: Total: ${bill_total:,.2f} Payment: ${bill_payment:,.2f} ' \
+                          f'Remaining: ${bill_remaining:,.2f} Paid to Date: ${bill_paid:,.2f} |'
+            print("-" * len(bill_string))
             print(bill_string)
-            print("-"*(len(bill_string)))
+            print("-" * len(bill_string))
         else:
-            payment_string = f"| {bill_name.title()}: PAID IN FULL |"
-            print("-"*len(payment_string))
-            print(payment_string)
-            print("-"*len(payment_string))
+            bill_string = f'| {bill_name.title()}: PAID IN FULL |'
+            print('-' * len(bill_string))
+            print(bill_string)
+            print('-' * len(bill_string))
 
 
-def process_payment(expense, amount):
-    index, bill = _get_bill(expense)
+def add_bill(name, payment, total):
+    with DatabaseConnection(bills_db) as connection:
+        cursor = connection.cursor()
 
-    if bill is not None:
-        if not bill['complete']:
-            bill['remaining'] -= amount
-            bill['paid'] += amount
-            bill['amount'] = amount
-            if bill['remaining'] <= 0:
-                bill['complete'] = True
-            print('Payment successful')
-            _update_and_write(bill, index)
+        cursor.execute('INSERT INTO bills VALUES(?, ?, ?, ?, ?, ?)', (name, total, payment, total, 0, 0))
 
 
-def quick_pay(expense):
-    index, bill = _get_bill(expense)
+def make_payment(name, amount):
+    with DatabaseConnection(bills_db) as connection:
+        cursor = connection.cursor()
 
-    if bill is not None:
-        if not bill['complete']:
-            bill['remaining'] -= bill['amount']
-            bill['paid'] += bill['amount']
-            if bill['remaining'] <= 0:
-                bill['complete'] = True
-            print('payment successful')
-            _update_and_write(bill, index)
-    else:
-        print("!! Expense not found !!\n")
+        try:
+            cursor.execute('SELECT remaining FROM bills WHERE name=?', (name,))
+            expense_remaining = cursor.fetchone()[0]
+            cursor.execute('SELECT paid FROM bills WHERE name=?', (name,))
+            expense_paid = cursor.fetchone()[0]
+        except TypeError:
+            print('!! Invalid Query !!')
+            return
 
-
-def add_expense(expense, amount, total):
-    bills = _get_bills()
-    bills.append(
-        {
-            "expense": expense,
-            "amount": amount,
-            "total": total,
-            "remaining": total,
-            "complete": False,
-            "paid": 0.0
-        }
-    )
-    _write_file(bills)
+        expense_remaining -= amount
+        if expense_remaining <= 0:
+            cursor.execute('UPDATE bills SET complete=? WHERE name=?', (1, name))
+        else:
+            expense_paid += amount
+            cursor.execute('UPDATE bills SET remaining=? WHERE name=?', (expense_remaining, name))
+            cursor.execute('UPDATE bills SET paid=? WHERE name=?', (expense_paid, name))
+            cursor.execute('UPDATE bills SET payment=? WHERE name=?', (amount, name))
 
 
-def remove(expense):
-    bills = _get_bills()
-    bills = [bill for bill in bills if bill["expense"] != expense]
+def quick_pay(name):
+    with DatabaseConnection(bills_db) as connection:
+        cursor = connection.cursor()
 
-    _write_file(bills)
+        try:
+            cursor.execute('SELECT remaining FROM bills WHERE name=?', (name,))  # finish quick pay method
+            expense_remaining = cursor.fetchone()[0]
+            cursor.execute('SELECT payment FROM bills WHERE name=?', (name,))
+            expense_payment = cursor.fetchone()[0]
+            cursor.execute('SELECT paid FROM bills WHERE name=?', (name,))
+            expense_paid = cursor.fetchone()[0]
+        except TypeError:
+            print('!! Invalid Query !!')
+            return
+
+        expense_remaining -= expense_payment
+        if expense_remaining <= 0:
+            cursor.execute('UPDATE bills SET complete=? WHERE name=?', (1, name))
+        else:
+            expense_paid += expense_payment
+            cursor.execute('UPDATE bills SET remaining=? WHERE name=?', (expense_remaining, name))
+            cursor.execute('UPDATE bills SET paid=? WHERE name=?', (expense_paid, name))
 
 
-def find_bill(bill_name):
-    bills = _get_bills()
-    return any(bill['expense'] == bill_name for bill in bills)
+def remove(name):
+    with DatabaseConnection(bills_db) as connection:
+        cursor = connection.cursor()
+
+        cursor.execute('DELETE FROM bills WHERE name=?', (name,))
 
 
-def _write_file(bills):
-    with open(bills_file, 'w') as file:
-        json.dump(bills, file)
+def update_bill(name):
+    with DatabaseConnection(bills_db) as connection:
+        cursor = connection.cursor()
+
+        update_string = """What property do you want to update
+    --> name
+    --> remaining
+    --> payment
+Selection: """
+        if _get_bill(name) is not None:
+            updated_field = input(update_string).lower()
+            if updated_field == 'name':
+                new_name = input('New name: ').lower()
+                cursor.execute('UPDATE bills SET name=? WHERE name=?', (new_name, name))
+            elif updated_field == 'remaining':
+                new_total = _to_float(input('Amount spent: $'))
+                if new_total is not None:
+                    _add_expense(name, new_total)
+            elif updated_field == 'payment':
+                new_payment = _to_float(input('New payment: $'))
+                if new_payment is not None:
+                    cursor.execute('UPDATE bills SET payment=? WHERE name=?', (new_payment, name))
+                else:
+                    pass
+            else:
+                print('!! Invalid Selection !!')
+        else:
+            print("!! Invalid Query !!")
+
+
+def _add_expense(name, amount):  # finish making method to add expenditure e.g. total = 500, spent = 50, remaining = 550
+    expense = _get_bill(name)
+    expense['remaining'] += amount
+
+    with DatabaseConnection(bills_db) as connection:
+        cursor = connection.cursor()
+
+        cursor.execute('UPDATE bills SET remaining=? WHERE name=?', (expense['remaining'], name))
 
 
 def _get_bills():
-    with open(bills_file, 'r') as file:
-        return json.load(file)
+    with DatabaseConnection(bills_db) as connection:
+        connection.text_factory = str
+        cursor = connection.cursor()
+
+        cursor.execute('SELECT * FROM bills')
+        expenses = [{'name': row[0], 'total': row[1], 'payment': row[2],
+                     'remaining': row[3], 'paid': row[4], 'complete': row[5]} for row in cursor.fetchall()]
+    return expenses
 
 
-def _get_bill(expense):
-    bills = _get_bills()
+def _get_bill(name):
+    with DatabaseConnection(bills_db) as connection:
+        connection.text_factory = str
+        cursor = connection.cursor()
 
-    for i, bill in enumerate(bills):
-        if bill['expense'] == expense:
-            return i, bill
+        try:
+            cursor.execute('SELECT * FROM bills WHERE name=?', (name,))
+            expense = cursor.fetchone()
+            expense = {'name': expense[0], 'total': expense[1], 'payment': expense[2],
+                       'remaining': expense[3], 'paid': expense[4], 'complete': expense[5]}
+        except TypeError:
+            return None
 
-    return None, None
+    return expense
 
 
-def _update_and_write(bill, index):
-    bills = _get_bills()
-    bills[index] = bill
+def _to_float(variable):
+    variable = variable.split(',')
+    variable = ''.join(variable)
 
-    _write_file(bills)
+    try:
+        variable = float(variable)
+    except ValueError:
+        return None
+
+    return variable

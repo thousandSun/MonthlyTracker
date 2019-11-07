@@ -1,7 +1,7 @@
-import categoriesdb
+import categoriesdb as db
 
-WELCOME_MESSAGE = """Welcome to the Category Expense Tracker v0.1
-You have the following options available:"""
+WELCOME_MESSAGE = """
+Welcome to the Category Expense Tracker!"""
 
 USER_PROMPT = """--> 1 - add category
 --> 2 - update category
@@ -15,23 +15,22 @@ Make a selection: """
 HELP_MESSAGE = """Welcome to Help
 
 Option 1 - add category
-    allows you to add expense categories like groceries, movies, gas, etc.
+    allows you to add an expense category
 
-Option 2 = update category
-    this option lets you add expenses to the categories (e.g. spent $10 on gas)
+Option 2 - update category
+    allows you to add money spent to specified category
 
 Option 3 - remove category
-    allows you to remove an expense category
+    removes specified category
 
 Option 4 - help message
-    displays this message
+    shows this rather useful help message
 
 Option 9 - main menu
-    returns to the main menu
+    go back to the main menu
 
-Option 0 - credits
-    displays credits message
-"""
+Option 0 - show credits
+    displays the credit message"""
 
 CREDITS_MESSAGE = """
 !!!!!!!!!!!!!!!!!!!!!!!!!
@@ -44,60 +43,56 @@ Contributors:
 
 
 def menu():
-    categoriesdb.create_file()
+    db.create_table()
     print(WELCOME_MESSAGE)
+    choice = ''
 
-    while True:
-        categoriesdb.show_categories()
+    while choice != 9:
+        db.show_categories()
+        print("You have the following options available:")
         try:
-            user_choice = int(input(USER_PROMPT))
+            choice = int(input(USER_PROMPT))
         except ValueError:
-            user_choice = 9999
+            choice = 999999
 
-        if user_choice == 1:
-            add_category()
-        elif user_choice == 2:
-            update_category()
-        elif user_choice == 3:
-            remove_category()
-        elif user_choice == 4:
+        if choice == 1:
+            add()
+        elif choice == 2:
+            update()
+        elif choice == 3:
+            remove()
+        elif choice == 4:
             print(HELP_MESSAGE)
-        elif user_choice == 9:
-            return
-        elif user_choice == 0:
+        elif choice == 0:
             print(CREDITS_MESSAGE)
-        else:
-            print("Invalid input, try again")
 
 
-def add_category():
+def add():
     name = input("Category name: ").lower()
-    categoriesdb.add_category(name)
+    db.add_category(name)
 
 
-def update_category():
+def update():
     name = input("Category name: ").lower()
-    if categoriesdb.find_category(name):
-        amount = _to_float(input("Amount spent: $"))
-        if amount is not None:
-            categoriesdb.add_expense(name, amount)
-        else:
-            print("Invalid input, try again")
+    amount = _to_float(input("Amount: $"))
+
+    if amount is not None:
+        db.update_category(name, amount)
     else:
-        print("!! Category not found, try again !!")
+        print("!! Invalid amount !!")
 
 
-def remove_category():
+def remove():
     name = input("Category name: ").lower()
-    categoriesdb.remove(name)
+    db.remove(name)
 
 
 def _to_float(variable):
     variable = variable.split(",")
-    variable = "".join(variable)
+    variable = ''.join(variable)
 
     try:
         variable = float(variable)
-    except ValueError:
+        return variable
+    except TypeError:
         return None
-    return variable

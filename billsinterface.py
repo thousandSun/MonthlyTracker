@@ -1,21 +1,22 @@
-import billsdb
+import billsdb as db
 
-USER_PROMPT = """--> 1 - add expense
+WELCOME_MESSAGE = """
+Welcome to MonthlyTracker!"""
+
+USER_PROMPT = """--> 1 - add bill
 --> 2 - make payment
---> 3 - remove expense
+--> 3 - remove bill
 --> 4 - quick pay
---> 5 - help
+--> 5 - update bill
+--> 6 - help
 --> 9 - main menu
 --> 0 - show credits
 
 Make a selection: """
 
-WELCOME_MESSAGE = """Welcome to the Monthly Expense Tracker v0.2!
-you have the following options available:"""
-
 HELP_MESSAGE = """Welcome to Help
 
-Option 1 - add expense
+Option 1 - add bill
     this option lets you add a monthly expenditure to your list of
     expenses
 
@@ -23,18 +24,22 @@ Option 2 - make payment
     this option allows you to enter a custom payment amount that
     will be saved to use in `quick pay` functionality
 
-option 3 - remove expense
+option 3 - remove bill
     this option does what it says, it removes a specific expense
 
 Option 4 - quick pay
     this option allows you to use last months payment amount as
     this months payment amount, you don't enter a payment amount
 
-Option 5 - help
-    show this somewhat useful help message
+Option 5 - update bill
+    allows you to change the name, remaining balance, and payment amount of an expense
+    (ex. your current credit card remaining balance is $500, you make a $50 purchase increasing the remaining balance to $550)
 
-Option 9 - exit program
-    closes the program
+Option 6 - help
+    displays this somewhat useful help message
+
+Option 9 - main menu
+    returns to the main menu
 
 Option 0 - show credits
     shows the author and the contributors to this project
@@ -44,84 +49,84 @@ CREDITS_MESSAGE = """
 !!!!!!!!!!!!!!!!!!!!!!!!!
 Written by Filiberto Rios
 !!!!!!!!!!!!!!!!!!!!!!!!!
-*********************************
-Contributors: Cpt Eman since v0.1
-*********************************
+*************
+Contributors:
+*************
 """
 
 
 def menu():
-    billsdb.create_file()
+    db.create_table()
     print(WELCOME_MESSAGE)
-    while True:
-        billsdb.show_payments()
+    user_choice = ''
+    while user_choice != 9:
+        db.show_expenses()
+        print("You have the following options available:")
         try:
             user_choice = int(input(USER_PROMPT))
         except ValueError:
-            user_choice = 9999
+            print('!! Invalid Selection !!')
+            continue
 
         if user_choice == 1:
-            add_expense()
+            add()
         elif user_choice == 2:
             make_payment()
         elif user_choice == 3:
-            remove_expense()
+            remove()
         elif user_choice == 4:
             quick_pay()
         elif user_choice == 5:
-            show_help()
+            update()
+        elif user_choice == 6:
+            print(HELP_MESSAGE)
         elif user_choice == 0:
             print(CREDITS_MESSAGE)
-        elif user_choice == 9:
-            return
-        else:
-            print("Invalid input, try again.")
 
 
-def add_expense():
-    expense = input("Payment name: ").lower()
-    total = _to_float(input("Total amount due: $"))
-    amount = _to_float(input("Monthly payment amount: $"))
-    if total is not None and amount is not None:
-        billsdb.add_expense(expense, amount, total)
+def add():
+    name = input("Bill name: ").lower()
+    total = _to_float(input("Total : $"))
+    payment = _to_float(input("Payment: $"))
+
+    if total is not None and payment is not None:
+        db.add_bill(name, payment, total)
     else:
-        print(f'{"Invalid total" if total is None else "Invalid amount"}, try again')
+        print(f'{"!! Invalid total amount" if total is None else "!! Invalid payment amount"}, try again !!')
 
 
 def make_payment():
-    bill = input("For what expense are you making a payment: ").lower()
-    # print(database.find_bill(bill))
-    if billsdb.find_bill(bill):
-        amount = _to_float(input("Payment amount: $"))
-        if amount is not None:
-            billsdb.process_payment(bill, amount)
-        else:
-            print("Invalid input, try again")
+    name = input("Bill name: ").lower()
+    payment = _to_float(input("Payment: $"))
+
+    if payment is not None:
+        db.make_payment(name, payment)
     else:
-        print("!! Expense not found !!")
+        print('!! Invalid payment amount !!')
 
 
-def remove_expense():
-    expense = input("What payment do you want to remove: ").lower()
-    billsdb.remove(expense)
+def remove():
+    name = input("Bill to remove: ")
+    db.remove(name)
 
 
 def quick_pay():
-    expense = input("Expense: ")
+    name = input("Bill name: ")
+    db.quick_pay(name)
 
-    billsdb.quick_pay(expense)
 
-
-def show_help():
-    print(HELP_MESSAGE)
+def update():
+    name = input("Bill name: ")
+    db.update_bill(name)
 
 
 def _to_float(variable):
-    variable = variable.split(",")
-    variable = "".join(variable)
+    variable = variable.split(',')
+    variable = ''.join(variable)
 
     try:
         variable = float(variable)
-    except ValueError:
+    except TypeError:
         return None
+
     return variable

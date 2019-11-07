@@ -1,4 +1,4 @@
-from database_connection import DatabaseConnection
+from .utils.database_connection import  DatabaseConnection
 
 
 def create_table():
@@ -9,27 +9,27 @@ def create_table():
                        "remaining real, paid real, complete BIT)")
 
 
-# def show_expenses():
-#     expenses = _get_bills()
-#
-#     for bill in expenses:
-#         bill_name = bill['name']
-#         if not bool(bill['complete']):
-#             bill_total = bill['total']
-#             bill_payment = bill['payment']
-#             bill_remaining = bill['remaining']
-#             bill_paid = bill['paid']
-#
-#             bill_string = f'| {bill_name.title()}: Total: {bill_total:,.2f} Payment: {bill_payment:,.2f} ' \
-#                           f'Remaining: {bill_remaining:,.2f} Paid to Date: {bill_paid:,.2f} |'
-#             print("-" * len(bill_string))
-#             print(bill_string)
-#             print("-" * len(bill_string))
-#         else:
-#             bill_string = f'| {bill_name.title()}: PAID IN FULL |'
-#             print('-' * len(bill_string))
-#             print(bill_string)
-#             print('-' * len(bill_string))
+def show_expenses():
+    expenses = _get_bills()
+
+    for bill in expenses:
+        bill_name = bill['name']
+        if not bool(bill['complete']):
+            bill_total = bill['total']
+            bill_payment = bill['payment']
+            bill_remaining = bill['remaining']
+            bill_paid = bill['paid']
+
+            bill_string = f'| {bill_name.title()}: Total: ${bill_total:,.2f} Payment: ${bill_payment:,.2f} ' \
+                          f'Remaining: ${bill_remaining:,.2f} Paid to Date: ${bill_paid:,.2f} |'
+            print("-" * len(bill_string))
+            print(bill_string)
+            print("-" * len(bill_string))
+        else:
+            bill_string = f'| {bill_name.title()}: PAID IN FULL |'
+            print('-' * len(bill_string))
+            print(bill_string)
+            print('-' * len(bill_string))
 
 
 def add_bill(name, payment, total):
@@ -50,13 +50,11 @@ def make_payment(name, amount):
             expense_paid = cursor.fetchone()[0]
         except TypeError:
             print('!! Invalid Query !!')
-            connection.close()
             return
 
         expense_remaining -= amount
         if expense_remaining <= 0:
             cursor.execute('UPDATE expenses SET complete=? WHERE name=?', (1, name))
-            print('aaaa')
         else:
             expense_paid += amount
             cursor.execute('UPDATE expenses SET remaining=? WHERE name=?', (expense_remaining, name))
@@ -77,7 +75,6 @@ def quick_pay(name):
             expense_paid = cursor.fetchone()[0]
         except TypeError:
             print('!! Invalid Query !!')
-            connection.close()
             return
 
         expense_remaining -= expense_payment
@@ -104,14 +101,13 @@ def update_bill(name):
         --> name
         --> remaining
         --> payment
-    Selection: """
+Selection: """
         if _get_bill(name) is not None:
             updated_field = input(update_string).lower()
             if updated_field == 'name':
                 new_name = input('New name: ').lower()
                 cursor.execute('UPDATE expenses SET name=? WHERE name=?', (new_name, name))
             elif updated_field == 'remaining':
-                connection.close()
                 new_total = _to_float(input('Amount spent: $'))
                 if new_total is not None:
                     _add_expense(name, new_total)
@@ -123,7 +119,6 @@ def update_bill(name):
                     pass
             else:
                 print('!! Invalid Selection !!')
-            connection.commit()
         else:
             print("!! Invalid Query !!")
 
@@ -135,7 +130,7 @@ def _add_expense(name, amount):  # finish making method to add expenditure e.g. 
     with DatabaseConnection('data.db') as connection:
         cursor = connection.cursor()
 
-        cursor.execute('UPDATE expense SET remaining=? WHERE name=?', (expense['remaining'], name))
+        cursor.execute('UPDATE expenses SET remaining=? WHERE name=?', (expense['remaining'], name))
 
 
 def _get_bills():
@@ -160,7 +155,6 @@ def _get_bill(name):
             expense = {'name': expense[0], 'total': expense[1], 'payment': expense[2],
                        'remaining': expense[3], 'paid': expense[4], 'complete': expense[5]}
         except TypeError:
-            connection.close()
             return None
 
     return expense
@@ -176,6 +170,3 @@ def _to_float(variable):
         return None
 
     return variable
-
-
-update_bill("house")

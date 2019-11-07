@@ -1,4 +1,4 @@
-import dbUpdate.db as db
+import dbUpdate.billsdb as db
 
 WELCOME_MESSAGE = """Welcome to MonthlyTracker v0.4!"""
 

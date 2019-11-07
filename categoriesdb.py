@@ -1,86 +1,75 @@
-import json
+from database_connection import DatabaseConnection
 
-"""
-JSON object will be
-[
-    {'category': string_value, 'spent': float_value}
-]
-"""
-
-categories_file = "categories.json"
+categories_database = "categories.db"
 
 
-def create_file():  # makes sure file is there
-    try:
-        with open(categories_file, 'x') as file:
-            json.dump([], file)
-    except FileExistsError:
-        pass
+def create_table():
+    with DatabaseConnection(categories_database) as connection:
+        cursor = connection.cursor()
+
+        cursor.execute('CREATE TABLE IF NOT EXISTS categories(name text primary key, total real)')
 
 
 def show_categories():
     categories = _get_categories()
 
     for category in categories:
-        category_name = category['category']
-        category_spent = category['spent']
+        name = category['category']
+        total = category['total']
 
-        category_string = f'| {category_name.title()}: Total spent: ${category_spent:,.2f} |'
-        print("-"*len(category_string))
-        print(category_string)
-        print("-"*len(category_string))
+        cat_str = f'| {name.title()}: ${total:,.2f} |'
+        print('-'*len(cat_str))
+        print(cat_str)
+        print('-'*len(cat_str))
 
 
 def add_category(name):
-    categories = _get_categories()
+    with DatabaseConnection(categories_database) as connection:
+        cursor = connection.cursor()
 
-    categories.append({
-        'category': name,
-        'spent': 0.0
-    })
+        cursor.execute('INSERT INTO categories VALUES(?, ?)', (name, 0))
 
-    _write_file(categories)
+
+def update_category(name, amount):
+    category = _get_category(name)
+
+    if category is not None:
+        total = category['total']
+        total += amount
+        with DatabaseConnection(categories_database) as connection:
+            cursor = connection.cursor()
+
+            cursor.execute('UPDATE categories SET total=? WHERE name=?', (total, name))
 
 
 def remove(name):
-    categories = _get_categories()
-    categories = [category for category in categories if category['category'] != name]
+    with DatabaseConnection(categories_database) as connection:
+        cursor = connection.cursor()
 
-    _write_file(categories)
-
-
-def add_expense(name, amount):
-    index, category = _get_category(name)
-
-    if category is not None:
-        category['spent'] += amount
-        _update_and_write(index, category)
-
-
-def find_category(name):
-    categories = _get_categories()
-    return any(category['category'] == name for category in categories)
-
-
-def _get_categories():
-    with open(categories_file, 'r') as file:
-        return json.load(file)
-
-
-def _write_file(categories):
-    with open(categories_file, "w") as file:
-        json.dump(categories, file)
+        cursor.execute('DELETE FROM categories WHERE name=?', (name,))
 
 
 def _get_category(name):
-    categories = _get_categories()
-    for index, category in enumerate(categories):
-        if category['category'] == name:
-            return index, category
+    with DatabaseConnection(categories_database) as connection:
+        connection.text_factory = str
+        cursor = connection.cursor()
+        try:
+            cursor.execute('SELECT * FROM categories WHERE name=?', (name,))
+            category = cursor.fetchone()
+            category = {'category': category[0], 'total': category[1]}
+
+            return category
+        except TypeError:
+            return None
 
 
-def _update_and_write(index, category):
-    categories = _get_categories()
-    categories[index] = category
+def _get_categories():
+    with DatabaseConnection(categories_database) as connection:
+        connection.text_factory = str
+        cursor = connection.cursor()
 
-    _write_file(categories)
+        cursor.execute('SELECT * FROM categories')
+
+        categories = [{'category': row[0], 'total': row[1]} for row in cursor.fetchall()]
+
+        return categories
