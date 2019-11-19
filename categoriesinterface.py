@@ -1,4 +1,4 @@
-import categoriesdb as db
+from categoriesdb import CatTracker
 
 WELCOME_MESSAGE = """
 Welcome to the Category Expense Tracker!"""
@@ -40,6 +40,8 @@ Written by Filiberto Rios
 Contributors:
 *************
 """
+
+db = CatTracker()
 
 
 def menu():
@@ -96,3 +98,7 @@ def _to_float(variable):
         return variable
     except TypeError:
         return None
+
+
+if __name__ == '__main__':
+    menu()

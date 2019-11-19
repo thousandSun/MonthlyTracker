@@ -1,4 +1,4 @@
-import billsdb as db
+from billsdb import BillTracker
 
 WELCOME_MESSAGE = """
 Welcome to MonthlyTracker!"""
@@ -54,6 +54,8 @@ Contributors:
 *************
 """
 
+db = BillTracker()
+
 
 def menu():
     db.create_table()
@@ -86,6 +88,10 @@ def menu():
 
 def add():
     name = input("Bill name: ").lower()
+    isalpha = name.isalnum()
+    if not isalpha and (name.find(" ") == -1):
+        print('!! Invalid Name !!')
+        return
     total = _to_float(input("Total : $"))
     payment = _to_float(input("Payment: $"))
 
@@ -126,7 +132,11 @@ def _to_float(variable):
 
     try:
         variable = float(variable)
-    except TypeError:
+    except ValueError:
         return None
 
     return variable
+
+
+if __name__ == '__main__':
+    menu()

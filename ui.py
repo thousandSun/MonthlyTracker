@@ -1,5 +1,5 @@
-import billsinterface as billsinterface
-import categoriesinterface as categoriesinterface
+import billsinterface
+import categoriesinterface
 
 WELCOME_MESSAGE = """Welcome to Expense Tracker v1.0
 You have the following options available:"""
