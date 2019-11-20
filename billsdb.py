@@ -15,7 +15,7 @@ class BillTracker:
 
     def __init__(self):
         self.bills_db = "bills.db"
-        logging.basicConfig(format='%(asctime)s %(name) : %(message)s',
+        logging.basicConfig(format='%(asctime)s %(name)s : %(message)s',
                             filename='log.log',
                             level=logging.INFO,
                             datefmt='%m-%d-%Y %H:%M:%S')
@@ -59,8 +59,8 @@ class BillTracker:
         except sqlite3.IntegrityError:
             print(f'!! Bill with name {name.title()} already exists !!')
         else:
-            message = 'Added {} payment with balance of ${} and monthly payments of ${}'\
-                .format(name.title(), total, payment)
+            message = f'Added {name.title()} payment with balance of ${total:,.2f} ' \
+                      f'and monthly payments of ${payment:,.2f}'
             self.logger.info(message)
 
     def make_payment(self, name, amount):
