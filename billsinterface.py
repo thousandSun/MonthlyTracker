@@ -1,3 +1,4 @@
+import tzlocal
 from billsdb import BillTracker
 
 WELCOME_MESSAGE = """
@@ -8,7 +9,8 @@ USER_PROMPT = """--> 1 - add bill
 --> 3 - remove bill
 --> 4 - quick pay
 --> 5 - update bill
---> 6 - help
+--> 6 - show logs
+--> 7 - help
 --> 9 - main menu
 --> 0 - show credits
 
@@ -35,8 +37,11 @@ Option 5 - update bill
     allows you to change the name, remaining balance, and payment amount of an expense
     (ex. your current credit card remaining balance is $500, you make a $50 purchase increasing the remaining balance to $550)
 
-Option 6 - help
-    displays this somewhat useful help message
+Option 6 - show logs
+    displays payments you've made in a friendly to read manner
+
+Option 7 - help
+    shows this somewhat useful help message
 
 Option 9 - main menu
     returns to the main menu
@@ -81,6 +86,8 @@ def menu():
         elif user_choice == 5:
             update()
         elif user_choice == 6:
+            show_log()
+        elif user_choice == 7:
             print(HELP_MESSAGE)
         elif user_choice == 0:
             print(CREDITS_MESSAGE)
@@ -138,5 +145,25 @@ def _to_float(variable):
     return variable
 
 
+def show_log():
+    with open("log.log") as f:
+        logs = f.readlines()
+        logs = [log.strip().split(" : ") for log in logs if "Payment" in log]
+
+    tz = tzlocal.get_localzone()
+    for log in logs:
+        date, time, expense_type = log[0].split()
+        if 'PAID IN FULL' in log[1]:
+            payment = log[1]
+        else:
+            payment = log[1][:-6]
+        message = f'{expense_type}: {payment} on {date} at {time} {tz}'
+        print("*"*len(message))
+        print(message)
+        print("*" * len(message))
+    print(" END OF LOG ".center(40, "!"))
+
+
 if __name__ == '__main__':
     menu()
+    # show_log()

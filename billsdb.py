@@ -203,5 +203,5 @@ Selection: """
         return variable
 
     def _write_payment_log(self, name: str, amount: float):
-        log_message = '{} for amount ${} made.'.format(name, amount)
+        log_message = f'{name} for amount ${amount:,.2f} made.'
         self.logger.info(log_message)

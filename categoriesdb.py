@@ -17,8 +17,10 @@ class CatTracker:
 
     def __init__(self):
         self.categories_database = "categories.db"
-        logging.basicConfig(format='%(asctime)s %(name): %(message)s', filename='log.log', level=logging.INFO,
-                            datefmt='%m-%d-%Y %H:%M:%')
+        logging.basicConfig(format='%(asctime)s %(name)s : %(message)s',
+                            filename='log.log',
+                            level=logging.INFO,
+                            datefmt='%m-%d-%Y %H:%M:%S')
         self.logger = logging.getLogger('Category')
 
     def create_table(self):
@@ -48,7 +50,8 @@ class CatTracker:
         except sqlite3.IntegrityError:
             print(f'!! Category with name {name.title()} already exists !!')
         else:
-            self.logger.info(f'{name.title()} added')
+            message = f'{name.title()} added'
+            self.logger.info(message)
 
     def update_category(self, name, amount):
         category = self._get_category(name)
