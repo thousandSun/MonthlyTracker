@@ -1,5 +1,5 @@
 import logging
-from sqlite3 import IntegrityError
+from sqlite3 import IntegrityError, OperationalError
 
 from database_connection import DatabaseConnection
 
@@ -205,3 +205,13 @@ Selection: """
     def _write_payment_log(self, name: str, amount: float):
         log_message = f'{name} for amount ${amount:,.2f} made.'
         self.logger.info(log_message)
+
+    @staticmethod
+    def reset():
+        try:
+            with DatabaseConnection('bills.db') as connection:
+                cursor = connection.cursor()
+
+                cursor.execute('DROP TABLE bills')
+        except OperationalError:
+            pass

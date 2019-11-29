@@ -1,4 +1,3 @@
-# TODO implement way to reset the bills db and the log file in one option
 import billsinterface
 import categoriesinterface
 
@@ -8,7 +7,8 @@ You have the following options available:"""
 USER_PROMPT = """--> 1 - Bills Tracker
 --> 2 - Categorical Tracker
 --> 3 - Help
---> 4 - Exit
+--> 4 - Reset
+--> 5 - Exit
 --> 0 - Credits
 
 Make your selection: """
@@ -49,7 +49,7 @@ def start():
     print(WELCOME_MESSAGE)
     user_choice = ""
 
-    while user_choice != 4:
+    while user_choice != 5:
         print()
         print("Main Menu:")
         try:
@@ -64,11 +64,19 @@ def start():
         elif user_choice == 3:
             print(HELP_MESSAGE)
         elif user_choice == 4:
-            print("Goodbye")
+            reset()
+        elif user_choice == 5:
+            print("Goodbye!")
         elif user_choice == 0:
             print(CREDITS_MESSAGE)
         else:
             print("Invalid input, try again")
 
 
-start()
+def reset():
+    billsinterface.BillTracker.reset()
+    categoriesinterface.CatTracker.reset()
+
+
+if __name__ == '__main__':
+    start()

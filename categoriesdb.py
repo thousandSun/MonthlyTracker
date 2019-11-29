@@ -1,5 +1,5 @@
 import logging
-import sqlite3
+from sqlite3 import IntegrityError, OperationalError
 
 from database_connection import DatabaseConnection
 
@@ -47,7 +47,7 @@ class CatTracker:
                 cursor = connection.cursor()
 
                 cursor.execute('INSERT INTO categories VALUES(?, ?)', (name, 0))
-        except sqlite3.IntegrityError:
+        except IntegrityError:
             print(f'!! Category with name {name.title()} already exists !!')
         else:
             message = f'{name.title()} added'
@@ -101,3 +101,15 @@ class CatTracker:
     def _write_log(self, name: str, amount: float):
         message = f'Spent ${amount:,.2f} for {name}'
         self.logger.info(message)
+
+    @staticmethod
+    def reset():
+        try:
+            with DatabaseConnection('categories.db') as connection:
+                cursor = connection.cursor()
+
+                cursor.execute('DROP TABLE categories')
+        except OperationalError:
+            pass
+
+        open('log.log', 'w').close()
