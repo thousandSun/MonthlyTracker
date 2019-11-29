@@ -1,3 +1,4 @@
+import tzlocal
 from categoriesdb import CatTracker
 
 WELCOME_MESSAGE = """
@@ -6,7 +7,8 @@ Welcome to the Category Expense Tracker!"""
 USER_PROMPT = """--> 1 - add category
 --> 2 - update category
 --> 3 - remove category
---> 4 - help message
+--> 4 - show logs
+--> 5 - help
 --> 9 - main menu
 --> 0 - credits
 
@@ -23,8 +25,11 @@ Option 2 - update category
 Option 3 - remove category
     removes specified category
 
-Option 4 - help message
-    shows this rather useful help message
+Option 4 - show logs
+    displays payments you've made in a friendly to read manner
+
+Option 5 - help
+    shows this somewhat useful help message
 
 Option 9 - main menu
     go back to the main menu
@@ -64,6 +69,8 @@ def menu():
         elif choice == 3:
             remove()
         elif choice == 4:
+            show_log()
+        elif choice == 5:
             print(HELP_MESSAGE)
         elif choice == 0:
             print(CREDITS_MESSAGE)
@@ -100,5 +107,23 @@ def _to_float(variable):
         return None
 
 
+def show_log():
+    with open("log.log") as f:
+        logs = f.readlines()
+        logs = [log.strip().split(" : ") for log in logs if "Category" in log]
+        print(logs)
+
+    tz = tzlocal.get_localzone()
+    for log in logs:
+        date, time, expense_type = log[0].split()
+        info = log[1]
+        message = f'{expense_type}: {info} on {date} at {time} {tz}'
+        print("*"*len(message))
+        print(message)
+        print("*" * len(message))
+    print(" END OF LOG ".center(40, "!"))
+
+
 if __name__ == '__main__':
-    menu()
+    # menu()
+    show_log()
