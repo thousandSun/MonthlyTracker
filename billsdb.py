@@ -1,5 +1,5 @@
 import logging
-import sqlite3
+from sqlite3 import IntegrityError
 
 from database_connection import DatabaseConnection
 
@@ -56,7 +56,7 @@ class BillTracker:
                 cursor = connection.cursor()
 
                 cursor.execute('INSERT INTO bills VALUES(?, ?, ?, ?, ?, ?)', (name, total, payment, total, 0, 0))
-        except sqlite3.IntegrityError:
+        except IntegrityError:
             print(f'!! Bill with name {name.title()} already exists !!')
         else:
             message = f'Added {name.title()} payment with balance of ${total:,.2f} ' \

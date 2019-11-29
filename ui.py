@@ -1,3 +1,4 @@
+# TODO implement way to reset the bills db and the log file in one option
 import billsinterface
 import categoriesinterface
 
